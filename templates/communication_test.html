@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign Connect AI | Real-Time Sign Language & Video Communication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/communication_test.css') }}?v=sibi_fix1"
+    />
+    <style>
+      #avatar2dControls {
+        display: none !important;
+      }
+      #avatar2dControls.active-gesture-mode {
+        display: flex !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- TOP NAVIGATION BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="brand" href="/" aria-label="Sign Connect AI home">
+            <span class="brand-mark">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+              </svg>
+            </span>
+            <span class="brand-text">Sign Connect <span>AI</span></span>
+          </a>
+          <span class="badge ai-live-pill">
+            <span class="pulse-indicator"></span>
+            AI STUDIO LIVE
+          </span>
+        </div>
+
+        <div class="topbar-center">
+          <div class="connection connecting" id="connectionStatus" aria-live="polite">
+            <span class="status-dot"></span>
+            <span class="status-text">Connecting</span>
+          </div>
+          <button id="inviteBtn" class="invite-chip" type="button" onclick="navigator.clipboard.writeText(window.location.href); alert('Room link copied! Open this in a second tab (or send to another person) to connect.');">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            Invite Link
+          </button>
+        </div>
+
+        <div class="topbar-right">
+          <div class="profile-card">
+            <span class="avatar" id="profileAvatar">SU</span>
+            <div class="profile-meta">
+              <strong id="profileName">Sign User</strong>
+              <small>Communication Room</small>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <!-- VIDEO CALLING STAGE -->
+        <section class="stage-section" aria-labelledby="stageHeading">
+          <div class="stage-header">
+            <div>
+              <span class="section-tag">LIVE VIDEO</span>
+              <h2 id="stageHeading">Interactive Conference</h2>
+            </div>
+            <div class="stage-status-group">
+              <span class="ready-badge" id="callStatusBadge">
+                <span class="status-dot"></span>
+                <span id="callStatus">Ready to connect</span>
+              </span>
+              <span class="subtle-status" id="cameraStatus">Camera ready</span>
+            </div>
+          </div>
+
+          <div class="video-grid">
+            <!-- LOCAL VIDEO CARD -->
+            <article class="video-card local-card">
+              <video
+                id="localVideo"
+                autoplay
+                muted
+                playsinline
+                aria-label="Your camera video"
+              ></video>
+
+              <div class="video-placeholder" id="localPlaceholder">
+                <div class="placeholder-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </div>
+                <h3>Camera Standby</h3>
+                <p>Start a video call to stream your camera and sign gestures.</p>
+              </div>
+
+              <!-- HIGH-END AI VISION HUD OVERLAY -->
+              <div class="video-ai-hud" id="videoAiHud">
+                <div class="hud-top-chip">
+                  <span class="hud-dot"></span>
+                  <span>AI VISION ACTIVE</span>
+                </div>
+                <div class="hud-character-card" id="hudSignCard">
+                  <div class="hud-letter-circle">
+                    <strong id="overlayCharacter">—</strong>
+                  </div>
+                  <div class="hud-meta">
+                    <span class="hud-caption">RECOGNIZED SIGN</span>
+                    <span class="hud-confidence" id="overlayConfidence">Confidence 0%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="video-footer">
+                <div class="participant-badge">
+                  <span class="live-dot" id="localLiveIndicator"></span>
+                  <div>
+                    <b id="localVideoName">Sign User</b>
+                    <small id="localMediaState">Camera off · Mic off</small>
+                  </div>
+                </div>
+                <span class="role-pill local-pill" id="localMediaStatus">YOU</span>
+              </div>
+            </article>
+
+            <!-- REMOTE VIDEO CARD -->
+            <article class="video-card remote-card">
+              <video
+                id="remoteVideo"
+                autoplay
+                playsinline
+                webkit-playsinline
+                muted
+                aria-label="Remote participant video"
+              ></video>
+
+              <button
+                id="remoteUnmuteBtn"
+                class="remote-unmute-btn"
+                type="button"
+                style="display:none;"
+                title="Click to unmute remote audio"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                <span>Click to Unmute</span>
+              </button>
+
+              <div class="video-placeholder remote-placeholder" id="remotePlaceholder">
+                <div class="placeholder-icon remote-icon">
+                  <span class="remote-avatar-circle" id="remoteAvatar">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </span>
+                </div>
+                <h3 id="remotePlaceholderTitle">Awaiting Peer</h3>
+                <p id="remotePlaceholderText">Share your room link to invite another participant to this call.</p>
+                <small id="remoteWaiting" style="display:none;"></small>
+              </div>
+
+              <div class="video-footer">
+                <div class="participant-badge">
+                  <span class="live-dot remote-dot" id="remoteLiveIndicator"></span>
+                  <div>
+                    <b id="remoteVideoName">Remote Peer</b>
+                    <small id="remoteMediaState">Waiting to connect</small>
+                  </div>
+                </div>
+                <span class="role-pill remote-pill" id="remoteMediaStatus">
+                  <span id="remoteParticipantName">PEER</span>
+                </span>
+              </div>
+            </article>
+          </div>
+
+          <!-- FLOATING CALL CONTROLS DOCK (Centered, never overlaps) -->
+          <div class="call-controls-wrapper">
+            <div class="call-controls" aria-label="Video call controls">
+              <button
+                id="cameraButton"
+                class="control-button off"
+                type="button"
+                aria-pressed="false"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                <span id="cameraLabel">Camera</span>
+              </button>
+
+              <button
+                id="microphoneButton"
+                class="control-button off"
+                type="button"
+                aria-pressed="false"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                <span id="microphoneLabel">Microphone</span>
+              </button>
+
+              <button id="startCallButton" class="start-call primary-btn" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Start Video Call</span>
+              </button>
+
+              <button id="endCallButton" class="end-call danger-btn" type="button" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>End Call</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MAIN WORKSPACE (2-COLUMN GRID) -->
+        <section class="workspace">
+          <!-- LEFT COLUMN: AI RECOGNITION STUDIO -->
+          <aside class="recognition-card card" aria-labelledby="recognitionTitle">
+            <div class="card-top">
+              <div>
+                <span class="card-eyebrow">AI SIGN ASSISTANT</span>
+                <h2 id="recognitionTitle">Recognition Studio</h2>
+              </div>
+              <span class="badge live-studio-badge">
+                <span class="pulse-indicator"></span>
+                LIVE
+              </span>
+            </div>
+
+            <!-- MODE SWITCHER -->
+            <div class="mode-control-block">
+              <label class="block-label">RECOGNITION MODE</label>
+              <div class="mode-picker" aria-label="Recognition modes">
+                <button
+                  id="alphabetMode"
+                  class="mode-button active"
+                  type="button"
+                  aria-pressed="true"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20h16"></path><path d="m6 16 6-12 6 12"></path><path d="M8 12h8"></path></svg>
+                  <span>A–Z Alphabet</span>
+                </button>
+                <button
+                  id="numberMode"
+                  class="mode-button"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+                  <span>1–10 Numbers</span>
+                </button>
+                <button
+                  id="gestureMode"
+                  class="mode-button"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path></svg>
+                  <span>✨ Special Gestures</span>
+                </button>
+              </div>
+              <span id="recognitionMode" style="display:none;">alphabet</span>
+            </div>
+
+            <!-- DETECTED GESTURE HERO TILE -->
+            <div class="gesture-hero-tile">
+              <div class="tile-header">
+                <span>DETECTED GESTURE</span>
+                <span class="status-dot green-dot"></span>
+              </div>
+
+              <div class="gesture-display-area">
+                <div class="gesture-circle-indicator">
+                  <strong id="detectedCharacter" aria-live="polite">—</strong>
+                </div>
+              </div>
+
+              <div class="confidence-gauge">
+                <div class="gauge-labels">
+                  <span>Recognition Confidence</span>
+                  <b id="confidenceValue">0%</b>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="confidenceBar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- HAND STATUS BANNER -->
+            <div class="hand-status-banner no-hand" id="handStatus" role="status">
+              <span class="hand-symbol">✋</span>
+              <div class="hand-meta">
+                <b>No hand detected</b>
+                <small>Hold your hand up to the camera</small>
+              </div>
+            </div>
+
+            <!-- LIVE SENTENCE ACCUMULATOR -->
+            <div class="accumulator-tile">
+              <div class="tile-header">
+                <span class="label-with-icon">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  SENTENCE BUFFER
+                </span>
+                <div class="tile-tools-group">
+                  <button type="button" class="mini-tool-btn" onclick="navigator.clipboard.writeText(document.getElementById('recognizedSentence').textContent); alert('Sentence copied!');">
+                    Copy
+                  </button>
+                  <button type="button" id="sendSentenceBtn" class="mini-tool-btn send-sentence-btn" title="Send formed sentence to chat">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    Send
+                  </button>
+                </div>
+              </div>
+              <div class="sentence-stream-row">
+                <div id="recognizedSentence" class="sentence-text" placeholder="Signs will accumulate into complete sentences here…"></div>
+                <button type="button" id="sendSentenceActionBtn" class="send-sentence-action-btn" title="Send formed sentence to chat">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  <span>Send</span>
+                </button>
+              </div>
+              
+              <!-- SENTENCE RECOMMENDATION CHIPS -->
+              <div id="sentenceSuggestions" class="suggestion-chips-container"></div>
+            </div>
+
+            <!-- CURRENT WORD FORMING & AUTOCOMPLETE -->
+            <div class="word-builder-tile">
+              <div class="tile-header">
+                <span class="label-with-icon">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"></path><path d="M9 20h6"></path><path d="M12 4v16"></path></svg>
+                  CURRENT WORD
+                </span>
+                <small class="hint-caption">Space accepts suggestion</small>
+              </div>
+
+              <div class="word-stream-row">
+                <div class="word-stream-box">
+                  <strong id="recognizedWord" class="word-text" aria-live="polite">Waiting for sign…</strong>
+                  <span id="wordSuggestion" class="suggestion-text"></span>
+                </div>
+                <div class="word-actions-inline">
+                  <button id="acceptWordBtn" class="accept-btn" type="button" style="display: none;">
+                    ✓ Accept
+                  </button>
+                  <button id="sendWordBtn" class="send-word-btn" type="button" style="display: none;">
+                    Send Word
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ERGONOMIC KEYPAD / SHORTCUTS -->
+            <div class="action-keypad">
+              <button id="undoSignButton" class="key-button" type="button">
+                <span>Undo</span>
+                <kbd>U</kbd>
+              </button>
+              <button id="spaceSignButton" class="key-button space-key" type="button">
+                <span>Space</span>
+                <kbd>␣</kbd>
+              </button>
+              <button id="sendSignButton" class="key-button send-key" type="button">
+                <span>Send Sign</span>
+                <kbd>S</kbd>
+              </button>
+              <button id="clearSignButton" class="key-button clear-key" type="button" onclick="if(window.clearSignPhrase){window.clearSignPhrase();}else{var rw=document.getElementById('recognizedWord');if(rw)rw.textContent='Waiting for sign…';var rs=document.getElementById('recognizedSentence');if(rs)rs.textContent='';var ws=document.getElementById('wordSuggestion');if(ws)ws.textContent='';var ss=document.getElementById('sentenceSuggestions');if(ss)ss.innerHTML='';var dc=document.getElementById('detectedCharacter');if(dc)dc.textContent='—';}">
+                <span>Clear</span>
+                <kbd>C</kbd>
+              </button>
+              <!-- Hidden compatibility buttons -->
+              <button id="undoButton" style="display:none;"></button>
+              <button id="spaceButton" style="display:none;"></button>
+              <button id="sendSign" style="display:none;"></button>
+              <button id="clearSign" style="display:none;"></button>
+              <div id="keyboardFallback" style="display:none;"></div>
+            </div>
+
+            <div class="shortcuts-legend">
+              <small><b>Shortcuts:</b> A (Alphabet) · N (Numbers) · Space (Accept Suggestion) · S (Send) · C (Clear)</small>
+            </div>
+          </aside>
+
+          <!-- RIGHT COLUMN: LIVE CONVERSATION STREAM -->
+          <section class="stream-card card" aria-labelledby="conversationTitle">
+            <div class="card-top">
+              <div>
+                <span class="card-eyebrow">REAL-TIME CONVERSATION</span>
+                <h2 id="conversationTitle">Sign Stream</h2>
+              </div>
+              <div class="name-editor-pill">
+                <span class="name-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                <label for="username">Display Name</label>
+                <input
+                  id="username"
+                  value="Sign User"
+                  maxlength="32"
+                  aria-label="Your display name"
+                />
+              </div>
+            </div>
+
+            <p class="stream-intro">
+              Completed signs and AI-smoothed sentences stream here in real time. Typed messages are shown as fallback.
+            </p>
+
+            <!-- CHAT MESSAGES FEED -->
+            <div
+              class="messages-viewport"
+              id="messages"
+              aria-live="polite"
+              aria-label="Live communication stream"
+            >
+              <!-- Dynamic message bubbles land here -->
+            </div>
+
+            <!-- PERMANENT MODERN CHAT COMPOSER (Always open & visible) -->
+            <div class="composer-container" aria-label="Keyboard message composer">
+              <div class="composer">
+                <input
+                  id="message"
+                  placeholder="Type a message or keyboard fallback…"
+                  maxlength="500"
+                  aria-label="Type message"
+                />
+                <button
+                  id="clearButton"
+                  class="clear-input-btn"
+                  type="button"
+                  aria-label="Clear typed message"
+                  title="Clear input"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <button id="sendButton" class="send-message-btn" type="button" title="Send message">
+                  <span>Send</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- VOICE SYNTHESIS & LANGUAGE CONTROLS -->
+            <div class="stream-footer">
+              <div class="voice-controls-group">
+                <button
+                  class="voice-toggle-btn"
+                  id="voiceButton"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                  <span id="voiceLabel">Enable voice</span>
+                </button>
+
+                <select id="languageSelect" class="lang-select">
+                  <option value="en-IN">English (Indian Voice)</option>
+                  <option value="hi-IN">Hindi (Translated)</option>
+                </select>
+              </div>
+              <span class="voice-legend">Voice reads completed signs and messages.</span>
+            </div>
+          </section>
+        </section>
+
+        <!-- SIGNCONNECT AI SIGN LANGUAGE REFERENCE SECTION -->
+        <section class="sibi-guide-section" aria-labelledby="sibiGuideTitle">
+          <div class="section-heading-card">
+            <div>
+              <span class="section-tag">REFERENCE LIBRARY</span>
+              <h2 id="sibiGuideTitle">SignConnect AI Hand Gesture Guide</h2>
+              <p>Reference visual postures and finger positions for accurate recognition in front of the camera.</p>
+            </div>
+            <div class="sibi-guide-tabs">
+              <button type="button" class="sibi-tab active" id="sibiAlphabetTab">A–Z Alphabet</button>
+              <button type="button" class="sibi-tab" id="sibiNumberTab">1–10 Numbers</button>
+              <button type="button" class="sibi-tab" id="sibiGestureTab">✨ Special Gestures</button>
+            </div>
+          </div>
+
+          <div class="sibi-guide-content-card">
+            <div class="sibi-card-header">
+              <div class="sibi-current-letter-pill">
+                <span class="sibi-badge">SIGN</span>
+                <strong id="sibiCurrentSign">A</strong>
+              </div>
+              <div class="sibi-nav-controls">
+                <button type="button" class="sibi-nav-btn" id="sibiPrevious" aria-label="Previous sign">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <span class="sibi-counter" id="sibiGuideCounter">1 / 26</span>
+                <button type="button" class="sibi-nav-btn" id="sibiNext" aria-label="Next sign">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="sibi-card-body" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+              <div class="sibi-visual-preview" id="sibiVisualPreviewWrapper" style="width: 84px; height: 104px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.06); flex-shrink: 0; padding: 4px;">
+                <img id="sibiVisualImg" src="/static/images/sibi/A.png" alt="SIBI Sign A" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+              </div>
+              <div class="sibi-instruction-box" style="flex: 1; min-width: 200px;">
+                <h4 id="sibiReferenceLetter">Sign A</h4>
+                <p id="sibiSignInstruction">Make the SIBI hand gesture for A</p>
+                <p id="sibiReferenceText" class="sibi-ref-note">Official SIBI Reference Guide for A</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                  <button
+                    type="button"
+                    id="sibiReferenceLink"
+                    class="sibi-external-link"
+                    aria-label="Open SIBI Gesture Handbook"
+                  >
+                    <span>📖 Open Gesture Handbook</span>
+                  </button>
+                  <a
+                    id="sibiOfficialExternalLink"
+                    href="https://pkplk.kemendikdasmen.go.id/sibi/kosakata/katadasar/1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="sibi-external-link"
+                    style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; text-decoration: none;"
+                    title="External Kemendikdasmen portal"
+                  >
+                    <span id="sibiOfficialText">Official SIBI A Portal ↗</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- SIBI VISUAL REFERENCE HANDBOOK MODAL -->
+    <div class="sibi-modal-backdrop" id="sibiModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="sibiModalTitle">
+      <div class="sibi-modal-card">
+        <div class="sibi-modal-header">
+          <div>
+            <span class="section-tag">REFERENCE HANDBOOK</span>
+            <h3 id="sibiModalTitle">SIBI Sign Language & Gesture Guide</h3>
+            <p class="sibi-modal-subtitle">Visual postures and finger instructions for all supported signs</p>
+          </div>
+          <button type="button" class="sibi-modal-close" id="sibiModalCloseBtn" aria-label="Close Handbook">✕</button>
+        </div>
+        <div class="sibi-modal-tabs">
+          <button type="button" class="sibi-modal-tab-btn active" id="modalAlphabetTab">A–Z Alphabet (26)</button>
+          <button type="button" class="sibi-modal-tab-btn" id="modalNumbersTab">1–10 Numbers (10)</button>
+          <button type="button" class="sibi-modal-tab-btn" id="modalGesturesTab">Special Gestures (15)</button>
+          <button type="button" class="sibi-modal-tab-btn" id="modalChartTab">🖼️ Official SIBI Charts</button>
+        </div>
+        <div class="sibi-modal-grid" id="sibiModalGrid"></div>
+        <div class="sibi-modal-footer">
+          <div class="sibi-modal-footer-note">
+            <span>Official SIBI standard reference. Real-time recognition ready.</span>
+          </div>
+          <button type="button" class="sibi-modal-done-btn" id="sibiModalDoneBtn">Close Handbook</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- SCRIPTS -->
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/communication_test.js') }}?v=disconnect_fix16"></script>
+    <script src="{{ url_for('static', filename='js/avatar2d.js') }}?v=disconnect_fix16"></script>
+  </body>
+</html>

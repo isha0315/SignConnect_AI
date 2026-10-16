@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign Connect AI — Technical Architecture & Implementation Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #eff6ff;
+    --accent: #0ea5e9;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --bg-main: #ffffff;
+    --bg-alt: #f8fafc;
+    --border: #e2e8f0;
+    --success: #16a34a;
+    --warning: #d97706;
+    --code-bg: #0f172a;
+    --code-text: #f1f5f9;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-main);
+    line-height: 1.6;
+    font-size: 10pt;
+  }
+
+  @page {
+    size: A4;
+    margin: 22mm 16mm 22mm 16mm;
+  }
+
+  /* Page Break Utilities */
+  .page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Cover Page */
+  .cover-page {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px 10px 10px 10px;
+    page-break-after: always;
+  }
+
+  .cover-header {
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 20px;
+  }
+
+  .badge-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 9999px;
+    margin-bottom: 16px;
+  }
+
+  .cover-title {
+    font-size: 32pt;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  .cover-title span {
+    color: var(--primary);
+  }
+
+  .cover-subtitle {
+    font-size: 13pt;
+    color: var(--text-muted);
+    font-weight: 400;
+    line-height: 1.4;
+    max-width: 650px;
+  }
+
+  .cover-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 30px 0;
+  }
+
+  .cover-meta-item strong {
+    display: block;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .cover-meta-item span {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .cover-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8.5pt;
+    color: var(--text-muted);
+  }
+
+  /* Typography & Structure */
+  h1 {
+    font-size: 19pt;
+    font-weight: 800;
+    color: #0f172a;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 6px;
+    margin-top: 26px;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+
+  h2 {
+    font-size: 13.5pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  h2::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 15px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+
+  h3 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin-bottom: 10px;
+    color: #334155;
+    text-align: justify;
+  }
+
+  ul, ol {
+    margin-left: 20px;
+    margin-bottom: 12px;
+    color: #334155;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 8.5pt;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  th {
+    background: #f1f5f9;
+    color: #0f172a;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    font-size: 7.5pt;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: #334155;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  /* Code Blocks */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 8pt;
+    line-height: 1.45;
+    margin: 12px 0;
+    overflow-x: auto;
+    border: 1px solid #1e293b;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    background: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    border: 1px solid #e2e8f0;
+  }
+
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+  }
+
+  /* Cards & Callouts */
+  .callout {
+    background: var(--bg-alt);
+    border-left: 4px solid var(--primary);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 14px 0;
+    font-size: 9pt;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .callout.warning {
+    border-left-color: var(--warning);
+    background: #fffbeb;
+  }
+  .callout.warning .callout-title {
+    color: #b45309;
+  }
+
+  .callout.success {
+    border-left-color: var(--success);
+    background: #f0fdf4;
+  }
+  .callout.success .callout-title {
+    color: #15803d;
+  }
+
+  /* Grid Layouts */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 12px 0;
+  }
+
+  .feature-box {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 8px;
+    page-break-inside: avoid;
+  }
+
+  .feature-box h4 {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+  }
+
+  .feature-box p {
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* TOC */
+  .toc-container {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .toc-title {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 9pt;
+    color: #1e293b;
+    font-weight: 500;
+  }
+
+  .toc-item strong {
+    color: var(--primary);
+    margin-right: 8px;
+  }
+
+  .diagram-box {
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7pt;
+    line-height: 1.35;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 12px 0;
+    border: 1px solid #1e293b;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover-page">
+  <div class="cover-header">
+    <div class="badge-tag">ENGINEERING TECHNICAL MANUAL & SPECIFICATION</div>
+    <h1 class="cover-title">Sign Connect <span>AI</span></h1>
+    <div class="cover-subtitle">
+      Comprehensive System Architecture, Deep Learning Implementation, WebRTC Video Streaming, NLP Grammar Engine & Complete Setup Guide
+    </div>
+  </div>
+
+  <div class="cover-meta-grid">
+    <div class="cover-meta-item">
+      <strong>Project Name</strong>
+      <span>Sign Connect AI (SignConnect)</span>
+    </div>
+    <div class="cover-meta-item">
+      <strong>Document Version</strong>
+      <span>v2.4.0 (Production Release)</span>
+    </div>
+    <div class="cover-meta-item">
+      <strong>Core Technologies</strong>
+      <span>PyTorch, MediaPipe, WebRTC, Flask-SocketIO, Python 3</span>
+    </div>
+    <div class="cover-meta-item">
+      <strong>Model Datasets</strong>
+      <span>SIBI / Indonesian-Indian Sign Language (A-Z, 1-9, Gestures)</span>
+    </div>
+    <div class="cover-meta-item">
+      <strong>Architecture Pattern</strong>
+      <span>Decoupled Producer-Consumer AI Worker & P2P Mesh</span>
+    </div>
+    <div class="cover-meta-item">
+      <strong>Deployment Targets</strong>
+      <span>Localhost, Cloudflare Tunnel Edge, Multi-Device Web</span>
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <span>Sign Connect AI Project Team &bull; Confidential & Proprietary</span>
+    <span>Date: October 2026</span>
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc-container avoid-break">
+  <div class="toc-title">Table of Contents</div>
+  <ul class="toc-list">
+    <li class="toc-item"><span><strong>01</strong> Executive Summary & Project Motivation</span> <span>Page 3</span></li>
+    <li class="toc-item"><span><strong>02</strong> High-Level System Architecture & Component Design</span> <span>Page 4</span></li>
+    <li class="toc-item"><span><strong>03</strong> Computer Vision & Deep Learning Subsystem</span> <span>Page 6</span></li>
+    <li class="toc-item"><span><strong>04</strong> Real-Time WebRTC Video & Socket.IO Signaling</span> <span>Page 10</span></li>
+    <li class="toc-item"><span><strong>05</strong> Natural Language Processing & Autocomplete Pipeline</span> <span>Page 12</span></li>
+    <li class="toc-item"><span><strong>06</strong> Interactive Avatar, Stickers & Audio Services</span> <span>Page 14</span></li>
+    <li class="toc-item"><span><strong>07</strong> Complete Codebase & File-by-File Breakdown</span> <span>Page 16</span></li>
+    <li class="toc-item"><span><strong>08</strong> Step-by-Step Installation & Execution Guide</span> <span>Page 19</span></li>
+    <li class="toc-item"><span><strong>09</strong> Complete Socket.IO Protocol & API Reference</span> <span>Page 22</span></li>
+    <li class="toc-item"><span><strong>10</strong> Automated Testing, Regression Suites & Troubleshooting</span> <span>Page 24</span></li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- SECTION 1 -->
+<h1>1. Executive Summary & Project Motivation</h1>
+
+<p>
+<strong>Sign Connect AI</strong> is an advanced, real-time, bidirectional assistive telecommunication platform engineered to bridge the communication barrier between deaf or hard-of-hearing sign language users and non-signing individuals during live video calls. While standard video conferencing tools (Zoom, Microsoft Teams, Google Meet) provide passive video streams, they lack native comprehension of sign language gestures. Sign Connect AI integrates computer vision, deep convolutional neural networks (CNNs), natural language processing (NLP), speech synthesis, and WebRTC streaming directly into a zero-install browser environment.
+</p>
+
+<div class="callout success">
+  <div class="callout-title">Core Value Proposition</div>
+  A single, seamless interface where a user can make signs in front of their webcam, have those signs classified at 20+ FPS with sub-50ms latency, buffered into words, grammatically smoothed into fluent sentences, spoken aloud via Text-to-Speech (TTS), and streamed over peer-to-peer WebRTC video to another participant across the globe.
+</div>
+
+<h2>1.1 The Accessibility Challenge</h2>
+<p>
+Over 430 million people worldwide experience disabling hearing loss (WHO). Traditional remote communication methods present severe friction:
+</p>
+<ul>
+  <li><strong>Typing Fatigue:</strong> Sign language is often a native primary language with spatial and grammatical structures that differ from spoken language. Typing while on video calls is distracting and slow.</li>
+  <li><strong>Lack of Low-Latency Machine Translation:</strong> Cloud-only video AI APIs introduce prohibitive latency (2–5 seconds per sign), rendering natural two-way conversation impossible.</li>
+  <li><strong>Hardware Barrier:</strong> Many existing solutions require specialized hardware (e.g., Leap Motion sensors, data gloves), which are costly and inaccessible.</li>
+</ul>
+
+<h2>1.2 The Sign Connect AI Solution</h2>
+<p>
+Sign Connect AI eliminates all specialized hardware by operating entirely with standard consumer webcams and web browsers. Key technical innovations include:
+</p>
+
+<div class="grid-2">
+  <div class="feature-box">
+    <h4>MediaPipe + 1D-CNN Pipeline</h4>
+    <p>Extracts 21 3D hand landmarks and feeds an axis-aligned 63-element feature vector to a custom 6-layer PyTorch CNN running at &gt;20 FPS.</p>
+  </div>
+  <div class="feature-box">
+    <h4>Decoupled Async Inference</h4>
+    <p>Socket.IO request handlers never block. Frames drop into an atomic per-connection buffer drained by a dedicated background worker thread.</p>
+  </div>
+  <div class="feature-box">
+    <h4>Multi-Mode Recognition</h4>
+    <p>Instant hot-switching between SIBI Alphabets (A-Z), SIBI Numbers (1-9), and 3D heuristic special gestures (I LOVE YOU, STOP, WATER, etc.).</p>
+  </div>
+  <div class="feature-box">
+    <h4>Grammar Smoothing & Autocomplete</h4>
+    <p>Debounced LanguageTool engine, word suggestion trie, and rule-based telegraphic-to-fluent English expansion convert isolated signs to natural sentences.</p>
+  </div>
+  <div class="feature-box">
+    <h4>Full WebRTC P2P Video Mesh</h4>
+    <p>Room-scoped STUN signaling enables zero-latency video calls between participants across NATs and cellular/broadband connections.</p>
+  </div>
+  <div class="feature-box">
+    <h4>Expressive Avatars & Stickers</h4>
+    <p>Client-side 21-point hand skeleton canvas overlays, 2D avatar reactions, and room-wide animated stickers for instant visual feedback.</p>
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- SECTION 2 -->
+<h1>2. High-Level System Architecture & Component Design</h1>
+
+<p>
+Sign Connect AI is architected using a decoupled, service-oriented structure designed for maximum throughput, low frame contention, and deterministic real-time responsiveness.
+</p>
+
+<h2>2.1 Architectural Flow Diagram</h2>
+<div class="diagram-box">
++---------------------------------------------------------------------------------------------------+
+|                                        BROWSER CLIENT LAYER                                       |
+|  +--------------------+   +-----------------------+   +-------------------+   +----------------+  |
+|  | WebRTC MediaStream |   | HTML5 Canvas Overlay  |   | UI Control Deck   |   | SIBI Reference |  |
+|  | Local / Remote Vid |   | 21-pt Hand Wireframe  |   | Mode & Shortcuts  |   | Visual Guide   |  |
+|  +---------+----------+   +-----------+-----------+   +---------+---------+   +--------+-------+  |
++------------|--------------------------|-------------------------|----------------------|----------+
+             |                          |                         |                      |
+             | WebRTC P2P Video Track   | Base64 Camera Frame     | Socket.IO Signaling  | HTTP / Static
+             |                          |                         |                      |
++------------v--------------------------v-------------------------v----------------------v----------+
+|                                  SIGN CONNECT AI SERVER (PYTHON)                                  |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  |                             Flask-SocketIO Server (Event Orchestration)                     |  |
+|  |   - Room Management (_rooms, _sid_to_room)          - Reconnection StateManager (Tokens)   |  |
+|  |   - WebRTC Signal Router (Offer / Answer / ICE)     - Live Message & Sticker Broadcaster    |  |
+|  +----------------------------------------------+----------------------------------------------+  |
+|                                                 | (Non-blocking queue submission)                 |
+|                                                 v                                                 |
+|  +---------------------------------------------------------------------------------------------+  |
+|  |                   InferenceWorker Thread (Decoupled Background Consumer)                    |  |
+|  |   - Atomic Per-Client Latest-Frame Drop Buffer (Drops stale backlog frames)                 |  |
+|  |   - Dispatches Frame to SignRecognitionService at 50ms interval (~20 FPS)                   |  |
+|  +----------------------------------------------+----------------------------------------------+  |
+|                                                 |                                                 |
+|                                                 v                                                 |
+|  +---------------------------------------------------------------------------------------------+  |
+|  |                                  AI & Computer Vision Engines                               |  |
+|  |   1. MediaPipe Hands Tracker (21 3D Landmarks: x, y, z)                                     |  |
+|  |   2. Strict Axis-Wise Min Normalization & 63-Element Feature Vector                          |  |
+|  |   3. Temporal Exponential Moving Average (EMA) Landmark Filter                              |  |
+|  |   4. PyTorch 1D-CNN (Alphabet SIBI & Number SIBI .pth Models)                                |  |
+|  |   5. 3D Geometric Heuristic Classifier (Direct Gestures: YES, NO, I LOVE YOU, STOP, etc.)   |  |
+|  |   6. Top-1 vs Top-2 Confidence Margin Filter (Disambiguation)                               |  |
+|  +----------------------------------------------+----------------------------------------------+  |
+|                                                 |                                                 |
+|                                                 v                                                 |
+|  +---------------------------------------------------------------------------------------------+  |
+|  |                          NLP & State Management (Post-Processing)                           |  |
+|  |   - Sliding Window Vote Accumulator (History Length = 7, Stable Frames = 4)                 |  |
+|  |   - Lexical Trie Autocomplete & Next-Word / Sentence Suggestions                           |  |
+|  |   - Telegraphic Sign Expansion & Debounced LanguageTool Grammar Correction                  |  |
+|  +---------------------------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------------------------+
+</div>
+
+<h2>2.2 Core Architectural Principles</h2>
+<ol>
+  <li><strong>Zero Blocking on the WebSocket Loop:</strong> In earlier architectures, executing PyTorch inference directly inside the Socket.IO event handler blocked all other incoming messages (including WebRTC ICE signals and chat messages). Sign Connect AI moves inference entirely into an asynchronous <code>InferenceWorker</code> thread. The socket handler takes a frame, updates the client buffer, and returns immediately.</li>
+  <li><strong>Stale Frame Dropping:</strong> Real-time telecommunication requires immediacy over completeness. If the neural network takes 40ms to execute, queued frames from 80ms ago are discarded. The worker always processes the <em>freshest</em> frame available for each connection.</li>
+  <li><strong>Reconnection Resilience via Session Tokens:</strong> If a user's network experiences a temporary hiccup, the client reconnects with a cryptographic session token. All accumulated sentence state, mode configuration, and autocomplete suggestions are instantly restored without loss.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- SECTION 3 -->
+<h1>3. Computer Vision & Deep Learning Subsystem</h1>
+
+<p>
+The core intelligence of Sign Connect AI is housed in <code>recognition_service.py</code>, <code>CNNModel.py</code>, and the supporting landmark processing modules. It transforms raw RGB video pixels into classified sign characters and full-phrase gestures.
+</p>
+
+<h2>3.1 Hand Tracking with Google MediaPipe</h2>
+<p>
+The first stage employs Google MediaPipe Hands (v0.10.14) configured with <code>max_num_hands=1</code>, <code>model_complexity=1</code>, and detection/tracking confidence thresholds of <code>0.6</code>. MediaPipe uses a two-stage detector-tracker pipeline:
+</p>
+<ul>
+  <li><strong>Palm Detector:</strong> Runs across the full frame to locate hand bounding boxes.</li>
+  <li><strong>Hand Landmark Model:</strong> Operates on the cropped palm region to predict 21 3D coordinates (x, y, z) with high sub-pixel precision.</li>
+</ul>
+
+<div class="callout">
+  <div class="callout-title">MediaPipe 21 Landmark Topology</div>
+  <p style="font-size: 8.5pt; margin: 0;">
+  [0] WRIST &bull; [1-4] THUMB (CMC, MCP, IP, TIP) &bull; [5-8] INDEX (MCP, PIP, DIP, TIP) &bull; [9-12] MIDDLE (MCP, PIP, DIP, TIP) &bull; [13-16] RING (MCP, PIP, DIP, TIP) &bull; [17-20] PINKY (MCP, PIP, DIP, TIP).
+  </p>
+</div>
+
+<h2>3.2 Feature Normalization & Strict Training Parity</h2>
+<p>
+A common failure in ML systems is a mismatch between feature preprocessing during training and live inference. In Sign Connect AI, landmark normalization strictly adheres to the translation-invariant formula established during training in <code>handLandMarks.py</code>:
+</p>
+
+<p>
+For each coordinate axis among x, y, and z, the minimum value across all 21 landmarks is determined independently:
+</p>
+<pre><code>x_min = min(x_0, x_1, ..., x_20)
+y_min = min(y_0, y_1, ..., y_20)
+z_min = min(z_0, z_1, ..., z_20)</code></pre>
+
+<p>
+The 63-element feature vector is assembled in strict interleaved order matching the training dataset DataFrame serialization:
+</p>
+<pre><code>features = [
+    x_0 - x_min, y_0 - y_min, z_0 - z_min,
+    x_1 - x_min, y_1 - y_min, z_1 - z_min,
+    ...
+    x_20 - x_min, y_20 - y_min, z_20 - z_min
+]  # Total size = 21 * 3 = 63 floats</code></pre>
+
+<p>
+This normalization ensures complete translation invariance: a hand held at the top-left of the screen generates the exact same numeric feature vector as a hand held at the bottom-right.
+</p>
+
+<h2>3.3 Temporal Exponential Moving Average (EMA) Smoothing</h2>
+<p>
+Webcam sensors and lighting conditions introduce high-frequency landmark jitter. To prevent inference instability, <code>recognition_service.py</code> maintains a per-connection EMA state vector:
+</p>
+<pre><code>features_smoothed = alpha * features_current + (1.0 - alpha) * features_previous
+# Default smoothing factor: alpha = 0.5</code></pre>
+
+<h2>3.4 PyTorch CNN Model Architecture (CNNModel)</h2>
+<p>
+The neural network is a deep 1D Convolutional Neural Network defined in <code>CNNModel.py</code>. The 63-element normalized vector is shaped into tensor dimension <code>(batch_size, 63, 1)</code> and passed through progressive feature extraction stages:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Layer Name</th>
+      <th>Kernel Size</th>
+      <th>Stride / Pad</th>
+      <th>Channels / Units</th>
+      <th>Activation / Regularization</th>
+      <th>Output Dimension</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Input Tensor</strong></td>
+      <td>—</td>
+      <td>—</td>
+      <td>63</td>
+      <td>—</td>
+      <td>(1, 63, 1)</td>
+    </tr>
+    <tr>
+      <td><strong>Conv1D Layer 1</strong></td>
+      <td>3</td>
+      <td>s=1, p=2</td>
+      <td>32</td>
+      <td>BatchNorm1D, ReLU</td>
+      <td>(1, 32, 3)</td>
+    </tr>
+    <tr>
+      <td><strong>Conv1D Layer 2</strong></td>
+      <td>3</td>
+      <td>s=1, p=2</td>
+      <td>64</td>
+      <td>BatchNorm1D, ReLU, MaxPool1D(2)</td>
+      <td>(1, 64, 2)</td>
+    </tr>
+    <tr>
+      <td><strong>Conv1D Layer 3</strong></td>
+      <td>3</td>
+      <td>s=1, p=2</td>
+      <td>128</td>
+      <td>BatchNorm1D, ReLU, Dropout(0.3)</td>
+      <td>(1, 128, 4)</td>
+    </tr>
+    <tr>
+      <td><strong>Conv1D Layer 4</strong></td>
+      <td>3</td>
+      <td>s=1, p=2</td>
+      <td>256</td>
+      <td>BatchNorm1D, ReLU, MaxPool1D(2)</td>
+      <td>(1, 256, 3)</td>
+    </tr>
+    <tr>
+      <td><strong>Conv1D Layer 5</strong></td>
+      <td>5</td>
+      <td>s=1, p=2</td>
+      <td>512</td>
+      <td>BatchNorm1D, ReLU, MaxPool1D(2)</td>
+      <td>(1, 512, 3)</td>
+    </tr>
+    <tr>
+      <td><strong>Conv1D Layer 6</strong></td>
+      <td>5</td>
+      <td>s=1, p=2</td>
+      <td>512</td>
+      <td>BatchNorm1D, ReLU, Dropout(0.4)</td>
+      <td>(1, 512, 5)</td>
+    </tr>
+    <tr>
+      <td><strong>Flatten Layer</strong></td>
+      <td>—</td>
+      <td>—</td>
+      <td>—</td>
+      <td>view(batch, -1)</td>
+      <td>(1, 2560) or (1, 512)</td>
+    </tr>
+    <tr>
+      <td><strong>Linear Output</strong></td>
+      <td>—</td>
+      <td>—</td>
+      <td>26 (or 9)</td>
+      <td>BatchNorm1D, ReLU, Softmax</td>
+      <td>(1, 26)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h2>3.5 Dual-Class Confidence Margin Thresholding</h2>
+<p>
+In real-world sign language, gestures such as 'M' vs 'N' or 'A' vs 'S' share subtle topological similarities. Standard softmax argmax frequently causes rapid character flickering when confidence is divided between two classes.
+</p>
+<p>
+To prevent erroneous output, Sign Connect AI executes a <strong>Top-2 Margin Test</strong>:
+</p>
+<pre><code>top2_probs, top2_indices = torch.topk(probabilities, 2)
+top1_prob = top2_probs[0].item()
+top2_prob = top2_probs[1].item()
+
+margin = 0.06 if mode == "number" else 0.15
+
+if (top1_prob - top2_prob) &lt; margin:
+    # Ambiguous prediction: reject frame rather than outputting false character
+    return {"character": "—", "confidence": 0, "hand_detected": True}</code></pre>
+
+<h2>3.6 Geometric Heuristic Gesture Classifier</h2>
+<p>
+In addition to trained single-letter CNN weights, <code>recognition_service.py</code> features a 3D geometric classifier that directly decodes complex communicative gestures using Euclidean distance and angle vectors:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Gesture Name</th>
+      <th>Landmark Conditions</th>
+      <th>Confidence</th>
+      <th>Action Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>YES (Thumbs Up)</strong></td>
+      <td>Fist closed (all 4 finger tips below pips), Thumb tip y &lt; ip and mcp</td>
+      <td>97%</td>
+      <td>Direct word addition + Thumbs Up Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>NO (Thumbs Down)</strong></td>
+      <td>Fist closed, Thumb extended downwards (tip y &gt; ip and mcp)</td>
+      <td>97%</td>
+      <td>Direct word addition + Thumbs Down Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>I LOVE YOU</strong></td>
+      <td>Thumb, Index, and Pinky extended upright; Middle and Ring curled</td>
+      <td>98%</td>
+      <td>Direct word addition + Heart Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>STOP</strong></td>
+      <td>All 5 fingers upright with wide palm spread metric &gt; 0.35</td>
+      <td>96%</td>
+      <td>Direct word addition + Stop Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>WATER (W Sign)</strong></td>
+      <td>Index, Middle, and Ring extended upright; Pinky curled</td>
+      <td>96%</td>
+      <td>Direct word addition + Water Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>GOOD MORNING</strong></td>
+      <td>Peace / V-sign (Index &amp; Middle upright, Ring &amp; Pinky curled)</td>
+      <td>95%</td>
+      <td>Direct phrase addition + Morning Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>NICE TO MEET YOU</strong></td>
+      <td>OK sign (Thumb &amp; Index pinch &lt; 0.32 hand size, 3 fingers up)</td>
+      <td>96%</td>
+      <td>Direct phrase addition + Handshake Sticker</td>
+    </tr>
+    <tr>
+      <td><strong>HOW ARE YOU</strong></td>
+      <td>Shaka sign (Thumb &amp; Pinky extended, Middle 3 curled)</td>
+      <td>95%</td>
+      <td>Direct phrase addition + Shaka Sticker</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>3.7 Character Buffering & Temporal State Machine</h2>
+<p>
+Once an individual frame is classified, it enters the temporal state machine in <code>sockets/events.py</code>. This state machine prevents double-counting, enforces stability, and handles word building:
+</p>
+<ul>
+  <li><strong>Sliding Window:</strong> Keeps the last 7 predictions with their confidence scores.</li>
+  <li><strong>Score Accumulation:</strong> Score(c) is the sum of confidence values for character c. A character must achieve at least 4 stable frames (&ge; 240 aggregate score) to be confirmed. Special gestures require only 2 stable frames (&ge; 140 score) for instant response.</li>
+  <li><strong>Repeat Sign Prevention:</strong> The same sign cannot trigger consecutively unless the hand is removed from the camera view (<code>hand_was_lost = True</code>) or an adaptive cooldown period has elapsed.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- SECTION 4 -->
+<h1>4. Real-Time WebRTC Video & Socket.IO Signaling</h1>
+
+<p>
+Sign Connect AI provides full peer-to-peer audio/video calling built upon the W3C WebRTC specification, orchestrated via Socket.IO WebSocket signaling.
+</p>
+
+<h2>4.1 WebRTC P2P Call Flow Architecture</h2>
+<div class="diagram-box">
+CLIENT A (Initiator)                    SERVER (Signaling)                  CLIENT B (Receiver)
+        |                                        |                                        |
+        |--- emit("join_room", {room_id}) ------>|                                        |
+        |                                        |<--- emit("join_room", {room_id}) ------|
+        |                                        |                                        |
+        |<-- emit("room_joined", peer_count=2) --|-- emit("room_joined", peer_count=2) ->|
+        |                                        |                                        |
+[Clicks "Start Call"]                            |                                        |
+Acquires Local MediaStream                       |                                        |
+Creates RTCPeerConnection                        |                                        |
+Adds Audio/Video Tracks                          |                                        |
+createOffer() -> setLocalDescription             |                                        |
+        |                                        |                                        |
+        |--- emit("webrtc_signal", {offer}) ---->|                                        |
+        |                                        |--- emit("webrtc_signal", {offer}) ---->|
+        |                                        |                         Acquires Local MediaStream
+        |                                        |                         Creates RTCPeerConnection
+        |                                        |                         setRemoteDescription(offer)
+        |                                        |                         createAnswer() -> setLocal
+        |                                        |<-- emit("webrtc_signal", {answer}) ----|
+        |<-- emit("webrtc_signal", {answer}) ----|                                        |
+setRemoteDescription(answer)                     |                                        |
+        |                                        |                                        |
+        |<============= Trickle ICE Candidates (STUN Negotiation) =======================>|
+        |                                        |                                        |
+        |<================== DIRECT ENCRYPTED PEER-TO-PEER MEDIA STREAM =================>|
+        |                               (DTLS / SRTP)                                     |
+</div>
+
+<h2>4.2 Hardware Stream Management & Camera Off Protection</h2>
+<p>
+A recurring bug in web video applications is that disabling the camera in software leaves the webcam physical indicator LED illuminated, causing battery drain and privacy concerns.
+</p>
+<p>
+Sign Connect AI resolves this via explicit hardware track termination in <code>static/js/communication.js</code>:
+</p>
+<pre><code>function stopLocalCamera() {
+    if (localStream) {
+        localStream.getTracks().forEach(track =&gt; {
+            track.stop(); // Halts hardware capture & releases physical camera lock
+        });
+        localStream = null;
+    }
+    localVideo.srcObject = null;
+    localCard.classList.remove("camera-active");
+    localPlaceholder.style.display = "flex";
+}</code></pre>
+<p>
+When the camera is re-enabled, <code>navigator.mediaDevices.getUserMedia()</code> re-acquires a fresh stream and re-binds video tracks across existing WebRTC peer connections via <code>sender.replaceTrack()</code>.
+</p>
+
+<div class="page-break"></div>
+
+<!-- SECTION 5 -->
+<h1>5. Natural Language Processing & Autocomplete Pipeline</h1>
+
+<p>
+Sign language fingerspelling is inherently discrete. To make communication natural and conversational, Sign Connect AI contains an integrated NLP subsystem divided into lexical autocomplete, contextual sentence recommendation, and grammar smoothing.
+</p>
+
+<h2>5.1 Lexical Trie & Prefix Autocomplete (autocomplete.py)</h2>
+<p>
+As individual characters are recognized, <code>get_suggestion(current_word)</code> evaluates the active prefix against a prioritized lexicon of essential communicative phrases:
+</p>
+<pre><code># Example: User fingerspells 'H' -> 'E' -> 'L'
+get_suggestion("HEL") -> "LO"   # Ghost completion displays "LO"
+# Pressing [Space] or clicking [Accept Word] instantly completes "HELLO"</code></pre>
+
+<h2>5.2 Contextual Sentence Starters</h2>
+<p>
+In addition to single-word completions, <code>get_sentence_suggestions()</code> generates interactive pill-shaped suggestion chips based on the initial character or keyword:
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Leading Sign</th>
+      <th>Contextual Recommendations Generated</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>H</strong></td>
+      <td>"HOW ARE YOU", "HAVE A GOOD DAY", "HELLO", "HELP"</td>
+    </tr>
+    <tr>
+      <td><strong>I</strong></td>
+      <td>"I AM FINE", "I NEED HELP", "I LOVE YOU", "I AM SORRY"</td>
+    </tr>
+    <tr>
+      <td><strong>W</strong></td>
+      <td>"WHAT IS YOUR NAME", "WHERE ARE YOU", "WAIT A MINUTE"</td>
+    </tr>
+    <tr>
+      <td><strong>T</strong></td>
+      <td>"THANK YOU SO MUCH", "TAKE CARE", "THAT IS AWESOME"</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5.3 Telegraphic Expansion & Debounced Grammar Smoothing (smoothing.py)</h2>
+<p>
+Sign language grammar often follows a topic-comment or telegraphic structure (e.g., <em>"I GO STORE"</em> rather than <em>"I am going to the store"</em>). Sign Connect AI handles this with a two-tier engine:
+</p>
+<ol>
+  <li><strong>Instant Rule-Based Expansion:</strong> Pure Python dictionary lookup executed per sign without latency. Maps shorthand phrases into fluent English:
+    <ul>
+      <li><code>"I GO STORE"</code> &rarr; <code>"I am going to the store."</code></li>
+      <li><code>"YOU WANT FOOD"</code> &rarr; <code>"Do you want some food?"</code></li>
+      <li><code>"I PAIN"</code> &rarr; <code>"I am in pain."</code></li>
+      <li><code>"WATER PLEASE"</code> &rarr; <code>"Can I have some water, please?"</code></li>
+    </ul>
+  </li>
+  <li><strong>Debounced LanguageTool Correction:</strong> Full NLP engines (like LanguageTool) spawn a Java process that takes 200–500ms per sentence. In earlier prototypes, executing this on every video frame produced severe lag. Sign Connect AI debounces LanguageTool: it runs <strong>only</strong> when the user presses <strong>Space</strong> or clicks <strong>Send Sign</strong>.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- SECTION 6 -->
+<h1>6. Interactive Avatar, Stickers & Audio Services</h1>
+
+<p>
+Sign Connect AI incorporates multimodal visual and auditory channels to enrich communication for both signing and non-signing participants.
+</p>
+
+<h2>6.1 Real-Time Hand Landmark Canvas Overlay</h2>
+<p>
+When AI recognition is active, the server returns the 21 normalized landmarks (x, y, z) within the <code>recognition_update</code> socket payload. The client overlays an HTML5 canvas directly atop the local video card, drawing:
+</p>
+<ul>
+  <li>21 landmark joints with depth-modulated radius and vibrant neon styling.</li>
+  <li>20 connecting skeletal bones mapped across the palm and fingers.</li>
+  <li>Color-coded indicators for high (&gt;80%) vs moderate (&lt;80%) confidence.</li>
+</ul>
+
+<h2>6.2 Animated Room Stickers</h2>
+<p>
+When special communicative gestures are confirmed (e.g., <em>I LOVE YOU</em>, <em>YES</em>, <em>NO</em>, <em>STOP</em>), the server dispatches a <code>sticker_gesture</code> event to all peers in the room. The browser animates a high-resolution contextual visual badge across the video viewport with physics-based entry and exit transitions.
+</p>
+
+<h2>6.3 Text-to-Speech (TTS) Proxy & Multi-Language Audio</h2>
+<p>
+To allow non-signing participants to hear what is being signed without looking at the screen, Sign Connect AI includes a speech synthesis module:
+</p>
+<ul>
+  <li><strong>Web Speech API:</strong> Native client-side speech synthesis with automatic fallback.</li>
+  <li><strong>Server-Side TTS Proxy (<code>/api/tts</code>):</strong> Proxies multi-lingual audio synthesis (English, Hindi) to prevent browser CORS and referrer blocking.</li>
+  <li><strong>Language Selection:</strong> Instant switching between Indian English (<code>en-IN</code>) and Hindi translation (<code>hi-IN</code>).</li>
+</ul>
+
+<h2>6.4 Interactive SIBI Sign Language Guide</h2>
+<p>
+Integrated directly into the bottom dashboard is an interactive visual reference guide. Users can cycle through all 26 alphabets (A–Z), 9 numbers (1–9), and 8 special gestures, viewing hand shape instructions while practicing in front of their webcam.
+</p>
+
+<div class="page-break"></div>
+
+<!-- SECTION 7 -->
+<h1>7. Complete Codebase & File-by-File Breakdown</h1>
+
+<p>
+The project adheres to a clean modular separation of concerns. Below is the comprehensive directory structure and the architectural role of each component:
+</p>
+
+<pre><code>Sign Language Recognition/
+├── communication_server.py        # Main server entry point & service orchestrator
+├── recognition_service.py         # PyTorch CNN inference & MediaPipe CV engine
+├── CNNModel.py                    # 1D-CNN PyTorch neural network definition
+├── CNN_model_alphabet_SIBI.pth    # Trained weights for Alphabet classification (A-Z)
+├── CNN_model_number_SIBI.pth      # Trained weights for Number classification (1-9)
+├── handLandMarks.py               # Landmark feature extraction pipeline for training
+├── mediapipeHandDetection.py      # Standalone MediaPipe camera preview utility
+├── realTime.py                    # Standalone desktop OpenCV recognition runner
+├── training.py                    # PyTorch model training & dataset loading script
+├── testCNN.py                     # Offline validation script for trained models
+├── test_features.py               # Comprehensive pytest test suite (12 test cases)
+├── requirements.txt               # Pinned Python dependencies
+├── cloudflared.exe                # Cloudflare Tunnel binary for public HTTPS routing
+├── routes/
+│   ├── __init__.py
+│   └── http_routes.py             # Flask Blueprints (/, /health, /api/tts, /preview)
+├── services/
+│   ├── __init__.py
+│   ├── inference_worker.py        # Background asynchronous frame consumer thread
+│   └── state_manager.py           # Per-user session token state & reconnection logic
+├── sockets/
+│   ├── __init__.py
+│   └── events.py                  # All Socket.IO events (signaling, AI, chat, room)
+├── nlp/
+│   ├── __init__.py
+│   ├── autocomplete.py            # Word/Sentence prediction & dictionary lookup
+│   └── smoothing.py               # Rule-based sign expansion & LanguageTool grammar
+├── static/
+│   ├── css/
+│   │   ├── communication.css      # Core responsive glassmorphic stylesheet
+│   │   └── communication_dark.css # Dedicated dark theme stylesheet
+│   ├── js/
+│   │   ├── communication.js       # Main frontend logic (WebRTC, Socket, Camera, UI)
+│   │   ├── avatar2d.js            # 2D Canvas avatar animation engine
+│   │   └── socket.io.min.js       # Bundled Socket.IO client library
+│   └── img/
+│       └── stickers/              # Animated SVG/JPG communicative sticker assets
+├── templates/
+│   ├── communication.html         # Main production HTML dashboard template
+│   ├── communication_dark.html    # Dark mode variant preview template
+│   └── communication_test.html    # Comprehensive UI test harness template
+└── frontend/                      # Optional modern React 19 + Vite frontend
+    ├── package.json
+    ├── vite.config.js
+    └── src/                       # React components (framer-motion, lucide-react)</code></pre>
+
+<div class="page-break"></div>
+
+<h2>7.1 Detailed File Roles & Responsibilities</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>File Path</th>
+      <th>Key Classes / Functions</th>
+      <th>Technical Responsibility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>communication_server.py</code></td>
+      <td><code>app</code>, <code>socketio</code>, <code>_on_inference_result()</code>, <code>_cleanup_loop()</code></td>
+      <td>Server bootstrap. Wires Flask Blueprints, Socket.IO, StateManager, InferenceWorker, and background session garbage collector.</td>
+    </tr>
+    <tr>
+      <td><code>recognition_service.py</code></td>
+      <td><code>SignRecognitionService</code>, <code>recognize()</code>, <code>classify_special_gesture()</code></td>
+      <td>Loads PyTorch models, runs MediaPipe HandTracker, extracts axis-aligned normalized 63 features, executes EMA filter and CNN inference.</td>
+    </tr>
+    <tr>
+      <td><code>CNNModel.py</code></td>
+      <td><code>CNNModel(nn.Module)</code>, <code>forward()</code></td>
+      <td>Defines the 6-layer 1D-CNN network architecture with BatchNorm, ReLU, Dropout, and Linear classification heads.</td>
+    </tr>
+    <tr>
+      <td><code>services/inference_worker.py</code></td>
+      <td><code>InferenceWorker</code>, <code>submit_frame()</code>, <code>_worker_loop()</code></td>
+      <td>Background worker thread managing an atomic per-sid frame buffer. Drains queue at ~20 FPS and drops stale frames.</td>
+    </tr>
+    <tr>
+      <td><code>services/state_manager.py</code></td>
+      <td><code>StateManager</code>, <code>connect()</code>, <code>disconnect()</code>, <code>get_state()</code></td>
+      <td>Provides reconnection-safe session state using cryptographically secure tokens. Preserves user state for 30 minutes on disconnect.</td>
+    </tr>
+    <tr>
+      <td><code>sockets/events.py</code></td>
+      <td><code>register_events()</code>, <code>handle_webrtc_signal()</code>, <code>process_recognized_sign()</code></td>
+      <td>Handles all WebSocket events: room join/leave, WebRTC SDP/ICE routing, chat messages, AI control commands, and voting logic.</td>
+    </tr>
+    <tr>
+      <td><code>routes/http_routes.py</code></td>
+      <td><code>http_bp</code>, <code>health()</code>, <code>tts_proxy()</code>, <code>index()</code></td>
+      <td>Serves HTTP endpoints, system uptime monitoring (/health), Google Translate audio proxy (/api/tts), and static HTML templates.</td>
+    </tr>
+    <tr>
+      <td><code>nlp/autocomplete.py</code></td>
+      <td><code>get_suggestion()</code>, <code>get_sentence_suggestions()</code></td>
+      <td>Prefix dictionary lookup providing next-character ghost text and sentence recommendation chips.</td>
+    </tr>
+    <tr>
+      <td><code>nlp/smoothing.py</code></td>
+      <td><code>smooth_sentence()</code>, <code>expand_word_gesture()</code></td>
+      <td>Transforms telegraphic sign strings into fluent English using rule-based dictionary expansion and debounced LanguageTool grammar check.</td>
+    </tr>
+    <tr>
+      <td><code>static/js/communication.js</code></td>
+      <td><code>setupWebRTC()</code>, <code>startVideoCall()</code>, <code>captureFrameLoop()</code></td>
+      <td>Full frontend controller: captures camera video, dispatches base64 frames to server, manages RTCPeerConnection, and binds UI state.</td>
+    </tr>
+    <tr>
+      <td><code>test_features.py</code></td>
+      <td><code>TestFeatureOrdering</code>, <code>TestRecognitionState</code></td>
+      <td>Pytest suite ensuring landmark normalization matches training and verifying state machine buffering, undo, and space behaviors.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- SECTION 8 -->
+<h1>8. Step-by-Step Installation & Execution Guide</h1>
+
+<p>
+This section provides a complete, foolproof guide to installing, configuring, and executing Sign Connect AI on Windows, Linux, or macOS.
+</p>
+
+<h2>8.1 System Prerequisites</h2>
+<ul>
+  <li><strong>Operating System:</strong> Windows 10/11, Ubuntu 20.04+, or macOS 12+</li>
+  <li><strong>Python Runtime:</strong> Python 3.10, 3.11, or 3.12 (64-bit recommended)</li>
+  <li><strong>Hardware:</strong> Standard HD Webcam (720p or 1080p), Dual-Core CPU or higher (GPU optional, CPU inference is fully optimized)</li>
+  <li><strong>Browser:</strong> Google Chrome, Microsoft Edge, Brave, or Mozilla Firefox with WebRTC permissions enabled</li>
+</ul>
+
+<h2>8.2 Installation Instructions</h2>
+
+<h3>Step 1: Clone or Extract the Repository</h3>
+<pre><code>cd "c:\Users\91986\OneDrive\Pictures\SignConnect_Project_Current.zip\Sign Language Recognition"</code></pre>
+
+<h3>Step 2: Create a Python Virtual Environment</h3>
+<pre><code># Create isolated virtual environment
+python -m venv venv
+
+# Activate on Windows PowerShell:
+.\venv\Scripts\Activate.ps1
+
+# Activate on Linux / macOS:
+source venv/bin/activate</code></pre>
+
+<h3>Step 3: Install Required Dependencies</h3>
+<pre><code>pip install -r requirements.txt</code></pre>
+<p>
+The core pinned dependencies installed are:
+</p>
+<pre><code>Flask==3.1.3
+Flask-SocketIO==5.6.1
+python-socketio==5.17.0
+simple-websocket==1.1.0
+opencv-python==5.0.0.93
+mediapipe==0.10.14
+torch==2.14.0
+numpy==2.4.6
+pandas==3.0.6
+language_tool_python==3.4.0
+requests
+playwright</code></pre>
+
+<div class="callout warning">
+  <div class="callout-title">PyTorch CUDA (Optional GPU Acceleration)</div>
+  By default, the CPU version of PyTorch is installed and delivers &gt;20 FPS with minimal CPU load (~8–12%). If you have an NVIDIA GPU and wish to enable CUDA acceleration:
+  <pre><code>pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121</code></pre>
+</div>
+
+<div class="page-break"></div>
+
+<h2>8.3 Verification & Automated Tests</h2>
+<p>
+Before launching the server, execute the automated verification test suite to ensure the PyTorch models, MediaPipe normalization, and state machine are operating with 100% precision:
+</p>
+<pre><code>python test_features.py</code></pre>
+<p>
+Expected output:
+</p>
+<pre><code>============================= test session starts =============================
+collected 12 items
+
+test_features.py::TestFeatureOrdering::test_feature_order_matches_training PASSED
+test_features.py::TestFeatureOrdering::test_feature_order_multiple_seeds PASSED
+test_features.py::TestFeatureOrdering::test_feature_length_is_63 PASSED
+test_features.py::TestRecognitionState::test_initial_state PASSED
+test_features.py::TestRecognitionState::test_letter_accumulation PASSED
+test_features.py::TestRecognitionState::test_word_suggestion_and_space PASSED
+test_features.py::TestRecognitionState::test_undo_character PASSED
+test_features.py::TestRecognitionState::test_undo_word_pullback PASSED
+test_features.py::TestRecognitionState::test_clear_state PASSED
+test_features.py::TestRecognitionState::test_special_gesture_direct_append PASSED
+test_features.py::TestRecognitionState::test_sliding_window_voting PASSED
+test_features.py::TestRecognitionState::test_reconnection_state_preservation PASSED
+
+============================= 12 passed in 1.42s =============================</code></pre>
+
+<h2>8.4 Running the Application Locally</h2>
+<pre><code>python communication_server.py</code></pre>
+<p>
+The console will display:
+</p>
+<pre><code>==============================================
+        SIGN CONNECT AI SERVER
+==============================================
+Server: http://127.0.0.1:5000
+Network: http://0.0.0.0:5000
+AI recognition: READY (background worker)
+WebRTC signaling: READY (room-scoped)
+Socket.IO: READY
+NLP smoothing: DEBOUNCED (space/send only)
+Session tokens: ENABLED
+Health check: /health
+==============================================</code></pre>
+<p>
+Open your web browser and navigate to <strong><code>http://localhost:5000</code></strong>.
+</p>
+
+<h2>8.5 Multi-Device Global Calling via Cloudflare Tunnel</h2>
+<p>
+Browsers restrict webcam and microphone access (<code>getUserMedia</code>) to secure origins (<code>https://</code> or <code>localhost</code>). If you want to connect two separate devices (e.g., your laptop and your mobile phone or a friend in another city), run the bundled Cloudflare Tunnel:
+</p>
+<pre><code># In a second terminal window:
+.\cloudflared.exe tunnel --url http://127.0.0.1:5000</code></pre>
+<p>
+Cloudflare will provide an active public HTTPS URL, such as:
+<code>https://your-temporary-name.trycloudflare.com</code>. Share this link with your peer. Both participants can open the link on separate devices and start an encrypted WebRTC call instantly.
+</p>
+
+<div class="page-break"></div>
+
+<!-- SECTION 9 -->
+<h1>9. Complete Socket.IO Protocol & API Reference</h1>
+
+<h2>9.1 WebSocket Events Catalog</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Direction</th>
+      <th>Payload Schema</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>connect</code></td>
+      <td>Client &rarr; Server</td>
+      <td>Query param: <code>?session_token=&lt;token&gt;</code></td>
+      <td>Initiates connection; restores state if session token is provided.</td>
+    </tr>
+    <tr>
+      <td><code>session_init</code></td>
+      <td>Server &rarr; Client</td>
+      <td><code>{session_token, restored, mode, current_word, sentence}</code></td>
+      <td>Confirms session registration and delivers restoration state.</td>
+    </tr>
+    <tr>
+      <td><code>join_room</code></td>
+      <td>Client &rarr; Server</td>
+      <td><code>{room_id: string, username: string}</code></td>
+      <td>Joins an isolated communication room for WebRTC and chat.</td>
+    </tr>
+    <tr>
+      <td><code>room_joined</code></td>
+      <td>Server &rarr; Room</td>
+      <td><code>{room_id, username, sender, peer_count}</code></td>
+      <td>Notifies all participants in the room of a new peer connection.</td>
+    </tr>
+    <tr>
+      <td><code>room_status</code></td>
+      <td>Server &rarr; Client</td>
+      <td><code>{room_id, peer_count, has_remote}</code></td>
+      <td>Delivers status indicating whether remote participants are ready.</td>
+    </tr>
+    <tr>
+      <td><code>recognition_frame</code></td>
+      <td>Client &rarr; Server</td>
+      <td><code>{image: base64, mode: string, username: string}</code></td>
+      <td>Submits a camera frame for asynchronous AI landmark classification.</td>
+    </tr>
+    <tr>
+      <td><code>frame_ack</code></td>
+      <td>Server &rarr; Client</td>
+      <td><code>{sid: string}</code></td>
+      <td>Immediate acknowledgement indicating frame was queued without stall.</td>
+    </tr>
+    <tr>
+      <td><code>recognition_update</code></td>
+      <td>Server &rarr; Client</td>
+      <td><code>{character, confidence, message, landmarks, suggestions, ...}</code></td>
+      <td>Returns AI prediction, confidence, wireframe skeleton, and words.</td>
+    </tr>
+    <tr>
+      <td><code>recognition_control</code></td>
+      <td>Bi-directional</td>
+      <td><code>{command: string, username: string, word?: string}</code></td>
+      <td>Executes commands: <code>alphabet</code>, <code>number</code>, <code>gesture</code>, <code>space</code>, <code>undo</code>, <code>clear</code>, <code>send</code>.</td>
+    </tr>
+    <tr>
+      <td><code>webrtc_signal</code></td>
+      <td>Bi-directional</td>
+      <td><code>{type: "offer"|"answer"|"candidate", sdp?, candidate?}</code></td>
+      <td>Room-scoped routing of WebRTC SDP handshakes and ICE candidates.</td>
+    </tr>
+    <tr>
+      <td><code>sticker_gesture</code></td>
+      <td>Server &rarr; Room</td>
+      <td><code>{username: string, gesture: string, message: string}</code></td>
+      <td>Broadcasts animated sticker visual overlay to all peers in the room.</td>
+    </tr>
+    <tr>
+      <td><code>send_message</code></td>
+      <td>Client &rarr; Server</td>
+      <td><code>{message: string, username: string, message_type: string}</code></td>
+      <td>Sends a typed or completed sign message to the room stream.</td>
+    </tr>
+    <tr>
+      <td><code>peer_left</code></td>
+      <td>Server &rarr; Room</td>
+      <td><code>{sender: string, peer_count: number}</code></td>
+      <td>Signals peer departure and updates room participant counter.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>9.2 HTTP REST Endpoints</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Response Format</th>
+      <th>Function</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/</code></td>
+      <td>GET</td>
+      <td>HTML (text/html)</td>
+      <td>Renders production Sign Connect AI communication interface.</td>
+    </tr>
+    <tr>
+      <td><code>/health</code></td>
+      <td>GET</td>
+      <td>JSON</td>
+      <td>Uptime, component health (flask, socketio, recognition).</td>
+    </tr>
+    <tr>
+      <td><code>/api/tts</code></td>
+      <td>GET</td>
+      <td>Audio (audio/mpeg)</td>
+      <td>Query: <code>?text=...&amp;lang=en|hi</code>. Streams synthesized audio speech.</td>
+    </tr>
+    <tr>
+      <td><code>/preview</code></td>
+      <td>GET</td>
+      <td>HTML (text/html)</td>
+      <td>Dark mode interface variant preview.</td>
+    </tr>
+    <tr>
+      <td><code>/test-ui</code></td>
+      <td>GET</td>
+      <td>HTML (text/html)</td>
+      <td>Automated test interface harness with simulated video feeds.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- SECTION 10 -->
+<h1>10. Automated Testing, Regression Suites & Troubleshooting</h1>
+
+<h2>10.1 Regression Testing Strategy</h2>
+<p>
+To ensure system stability, Sign Connect AI incorporates automated tests guarding against critical failure modes:
+</p>
+<ul>
+  <li><strong>Feature Ordering Lock:</strong> <code>TestFeatureOrdering</code> tests verify that landmark normalization produces identical 63-element feature vectors across random seeds, matching the training pipeline within float32 precision (1e-6).</li>
+  <li><strong>State Preservation:</strong> <code>test_reconnection_state_preservation</code> verifies that if a client disconnects and reconnects with a session token within 30 minutes, all in-progress words and sentences are preserved.</li>
+  <li><strong>Sliding Window Stability:</strong> Tests ensure that low-confidence frames (&lt;60%) or sporadic one-frame flickers never append incorrect letters.</li>
+</ul>
+
+<h2>10.2 Troubleshooting Matrix & Common Pitfalls</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Symptom</th>
+      <th>Root Cause</th>
+      <th>Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Laptop Camera LED stays ON after clicking "Turn Off"</strong></td>
+      <td>MediaStream tracks were set to null without calling <code>track.stop()</code>.</td>
+      <td>Resolved in <code>communication.js</code>. The function iterates through <code>stream.getTracks()</code> and invokes <code>track.stop()</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Remote video does not connect between two devices</strong></td>
+      <td>Direct peer connection blocked by symmetric NAT without STUN/TURN.</td>
+      <td>Verify STUN server (<code>stun:stun.l.google.com:19302</code>) is reachable. Ensure both devices join the exact same room ID.</td>
+    </tr>
+    <tr>
+      <td><strong>"Camera permission denied" error in browser</strong></td>
+      <td>Webcam accessed over unencrypted HTTP from a non-localhost IP.</td>
+      <td>Use <code>http://localhost:5000</code> locally, or launch <code>cloudflared.exe</code> to obtain an HTTPS link for multi-device access.</td>
+    </tr>
+    <tr>
+      <td><strong>Audio does not play when Text-to-Speech triggers</strong></td>
+      <td>Browser Autoplay Policy blocks audio prior to user interaction.</td>
+      <td>User must click anywhere on the page or click "Enable Voice" once to grant audio playback authorization.</td>
+    </tr>
+    <tr>
+      <td><strong>Gestures not recognized in Alphabet mode</strong></td>
+      <td>Mode separation design prevents letters from colliding with gestures.</td>
+      <td>Switch mode to <strong>Special Gestures</strong> (or press <strong>G</strong>) to activate 3D heuristic gesture recognition.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout success">
+  <div class="callout-title">Document Summary & Verification</div>
+  This document represents the complete, authoritative technical specification and operational manual for <strong>Sign Connect AI</strong>. All code samples, architectures, and commands reflect the active production codebase.
+</div>
+
+</body>
+</html>

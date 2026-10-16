@@ -1,0 +1,41 @@
+.shine-border-container {
+  position: relative;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.shine-border-track {
+  position: absolute;
+  inset: -150%;
+  pointer-events: none;
+  z-index: 0;
+  animation: shineSpin var(--shine-duration, 6s) linear infinite;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--shine-c1, #06b6d4) 60deg,
+    var(--shine-c2, #8b5cf6) 120deg,
+    transparent 180deg,
+    var(--shine-c3, #10b981) 240deg,
+    transparent 360deg
+  );
+  opacity: var(--shine-opacity, 0.7);
+}
+
+.shine-border-inner {
+  position: relative;
+  z-index: 1;
+  background: inherit;
+  border-radius: inherit;
+  height: 100%;
+  width: 100%;
+}
+
+@keyframes shineSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign Connect AI | AI-Powered Sign Language & Video Communication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/communication_dark.css') }}?v=rename_v5"
+    />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Sign Connect AI home"
+          ><span class="brand-mark">SCAI</span
+          ><span>Sign Connect <span>AI</span></span></a
+        >
+        <div
+          class="connection connecting"
+          id="connectionStatus"
+          aria-live="polite"
+        >
+          <i></i><span>Connecting</span>
+        </div>
+        <div class="profile">
+          <span class="avatar" id="profileAvatar">SC</span>
+          <div>
+            <strong id="profileName">Sign User</strong>
+            <small>Communication room</small>
+          </div>
+        </div>
+      </header>
+      <main class="dashboard">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Live sign conversation</p>
+            <h1>Communicate without barriers.</h1>
+            <p>
+              Sign naturally. Let AI understand your gestures while you connect
+              through live video.
+            </p>
+          </div>
+          <span class="ready-badge" id="callStatus"
+            ><i></i> Ready to connect</span
+          >
+        </section>
+        <section class="stage" aria-labelledby="videoTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Video calling first</p>
+              <h2 id="videoTitle">Your live conversation</h2>
+            </div>
+            <span class="subtle-status" id="cameraStatus">Camera ready</span>
+          </div>
+          <div class="video-grid">
+            <article class="video-card local-card">
+              <video
+                id="localVideo"
+                autoplay
+                muted
+                playsinline
+                aria-label="Your camera video"
+              ></video>
+              <div class="video-placeholder" id="localPlaceholder">
+                <span>⌁</span>
+                <p>Start a video call to enable your camera.</p>
+              </div>
+              <div class="video-ai-overlay">
+                <span><i></i> AI recognition active</span>
+                <div>
+                  <small>Detected</small><strong id="overlayCharacter">—</strong
+                  ><small id="overlayConfidence">Confidence 0%</small>
+                </div>
+              </div>
+              <div class="video-footer">
+                <span class="participant">
+                  <b id="localVideoName">Sign User</b>
+                  <small>
+                    LOCAL · <span id="localMediaState">Camera off</span>
+                  </small>
+                </span>
+              </div>
+            </article>
+            <article class="video-card remote-card">
+              <video
+                id="remoteVideo"
+                autoplay
+                playsinline
+                webkit-playsinline
+                muted
+                aria-label="Remote participant video"
+              ></video>
+              <div
+                class="video-placeholder remote-placeholder"
+                id="remotePlaceholder"
+              >
+                <span>◌</span>
+                <p id="remoteWaiting">Ready for another participant.</p>
+              </div>
+              <div class="video-footer">
+                <span class="participant"
+                  ><b id="remoteName">Other participant</b
+                  ><small
+                    >REMOTE ·
+                    <span id="remoteState">Ready to connect</span></small
+                  ></span
+                ><span class="badge remote-badge">REMOTE</span>
+              </div>
+            </article>
+          </div>
+          <div class="call-controls" aria-label="Video call controls">
+            <button
+              id="cameraButton"
+              class="control-button off"
+              type="button"
+              aria-pressed="false"
+            >
+              ◉ <span>Camera</span></button
+            ><button
+              id="microphoneButton"
+              class="control-button off"
+              type="button"
+              aria-pressed="false"
+            >
+              ◌ <span>Microphone</span></button
+            ><button id="startCallButton" class="start-call" type="button">
+              Start video call</button
+            ><button id="endCallButton" class="end-call" type="button" disabled>
+              End call
+            </button>
+          </div>
+        </section>
+        <section class="workspace">
+          <aside
+            class="recognition-card card"
+            aria-labelledby="recognitionTitle"
+          >
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">AI sign assistant</p>
+                <h2 id="recognitionTitle">Recognition</h2>
+              </div>
+              <span class="ai-pill"><i></i> LIVE</span>
+            </div>
+            <div class="mode-picker" aria-label="Recognition modes">
+              <button
+                id="alphabetMode"
+                class="mode-button active"
+                type="button"
+                aria-pressed="true"
+              >
+                A–Z</button
+              ><button
+                id="numberMode"
+                class="mode-button"
+                type="button"
+                aria-pressed="false"
+              >
+                1–9
+              </button>
+            </div>
+            <p class="mode-help">
+              Mode is controlled in the recognition window.
+            </p>
+            <div class="detection">
+              <p>Detected gesture</p>
+              <strong id="detectedCharacter" aria-live="polite">—</strong>
+              <div class="confidence">
+                <div>
+                  <span>Recognition confidence</span
+                  ><b id="confidenceValue">0%</b>
+                </div>
+                <div class="progress">
+                  <i id="confidenceBar" style="width: 0%"></i>
+                </div>
+              </div>
+            </div>
+            <div class="forming">
+              <span>Sentence</span>
+              <div id="recognizedSentence" class="sentence-text" style="min-height: 24px; font-weight: bold; margin-bottom: 8px;"></div>
+              
+              <div id="sentenceSuggestions" class="suggestion-chips-container"></div>
+              
+              <span>Current word</span>
+              <div style="font-size: 1.2em; display: flex; align-items: center; gap: 8px;">
+                <div>
+                  <strong id="recognizedWord" class="word-text" aria-live="polite">Waiting for sign…</strong><span id="wordSuggestion" class="suggestion-text" style="color: gray;"></span>
+                </div>
+                <button id="acceptWordBtn" class="primary-action" style="display: none; padding: 4px 12px; font-size: 0.8em; border-radius: 12px;">Accept Word</button>
+                <button id="sendWordBtn" class="primary-action" style="display: none; padding: 4px 12px; font-size: 0.8em; border-radius: 12px; background: #22c55e;">Send Word</button>
+              </div>
+            </div>
+            <div class="hand-status no-hand" id="handStatus" role="status">
+              <span class="hand-icon">✋</span
+              ><span
+                ><b>No hand detected</b
+                ><small>Show your hand to the camera</small></span
+              >
+            </div>
+            <div class="recognition-actions">
+              <button id="undoSignButton" type="button">Undo</button
+              ><button id="spaceSignButton" type="button">Space</button
+              ><button id="sendSignButton" class="primary-action" type="button">
+                Send sign ↑
+              </button>
+            </div>
+            <p class="shortcut-note">
+              Recognition shortcuts: A alphabet · N numbers · Space (accepts suggestion) · S send · C
+              clear · Esc exit
+            </p>
+          </aside>
+          <section class="stream-card card" aria-labelledby="conversationTitle">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">Live communication</p>
+                <h2 id="conversationTitle">Sign stream</h2>
+              </div>
+              <label class="name-field"
+                >Your name<input
+                  id="username"
+                  value="Sign User"
+                  maxlength="32"
+                  aria-label="Your display name"
+              /></label>
+            </div>
+            <p class="stream-intro">
+              Completed signs arrive here in real time. Typed messages are shown
+              as a fallback.
+            </p>
+            <div
+              class="messages"
+              id="messages"
+              aria-live="polite"
+              aria-label="Live communication stream"
+            ></div>
+            <details class="fallback">
+              <summary>Use keyboard instead</summary>
+              <div class="composer">
+                <input
+                  id="message"
+                  placeholder="Type a fallback message…"
+                  maxlength="500"
+                  aria-label="Fallback message"
+                /><button
+                  id="clearButton"
+                  class="icon-button"
+                  type="button"
+                  aria-label="Clear typed message"
+                >
+                  ×</button
+                ><button id="sendButton" class="send-button" type="button">
+                  Send ↑
+                </button>
+              </div>
+            </details>
+            <div class="stream-footer" style="display: flex; gap: 10px; align-items: center;">
+              <button
+                class="voice-button"
+                id="voiceButton"
+                type="button"
+                aria-pressed="false"
+              >
+                <span>⌁</span> <span id="voiceLabel">Enable voice</span></button
+              >
+              <select id="languageSelect" class="mode-button" style="padding: 4px 8px; border-radius: 6px;">
+                <option value="en-IN">English (Indian Voice)</option>
+                <option value="hi-IN">Hindi (Translated)</option>
+              </select>
+              <span>Voice reads completed messages.</span>
+            </div>
+          </section>
+        </section>
+      <!-- SIBI Sign Language Guide -->
+<section class="sibi-guide-section" aria-labelledby="sibiGuideTitle">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">REFERENCE</span>
+            <h2 id="sibiGuideTitle">SignConnect AI Hand Gesture Guide</h2>
+            <p>Use these SignConnect AI hand shapes as a reference while making signs in front of the camera.</p>
+        </div>
+    </div>
+
+    <div class="sibi-guide-card">
+        <div class="sibi-guide-tabs">
+            <button type="button" class="sibi-tab active" id="sibiAlphabetTab">
+                A–Z Alphabet
+            </button>
+
+            <button type="button" class="sibi-tab" id="sibiNumberTab">
+                1–9 Numbers
+            </button>
+        </div>
+
+        <div class="sibi-guide-content">
+            <button type="button" class="sibi-nav-button" id="sibiPrevious">
+                ← Previous
+            </button>
+
+            <div class="sibi-sign-display">
+                <div class="sibi-sign-image-wrapper">
+    
+
+    <div class="sibi-reference-box">
+
+    <div class="sibi-reference-letter" id="sibiReferenceLetter">
+        A
+    </div>
+
+    <p id="sibiReferenceText">
+        SignConnect AI reference for A
+    </p>
+
+</div>
+</div>
+
+                <h3 id="sibiCurrentSign">A</h3>
+
+                <p id="sibiSignInstruction">
+                    Make the SignConnect AI hand gesture for A
+                </p>
+            </div>
+
+            <button type="button" class="sibi-nav-button" id="sibiNext">
+                Next →
+            </button>
+        </div>
+
+        <div class="sibi-guide-counter" id="sibiGuideCounter">
+            1 / 26
+        </div>
+    </div>
+</section>
+      </main>
+    </div>
+    <div
+      class="toast-region"
+      id="toastRegion"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/communication.js') }}?v=disconnect_fix16"></script>
+    <script src="{{ url_for('static', filename='js/avatar2d_dark.js') }}?v=disconnect_fix16"></script>
+  </body>
+</html>
